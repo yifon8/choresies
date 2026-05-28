@@ -1,3 +1,7 @@
+ReadMe created from conclusions of chat session by Claude Chat
+
+
+
 \# Chore Wheel 🎡
 
 
