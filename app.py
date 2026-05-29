@@ -43,9 +43,25 @@ class App(tk.Tk):
     # ------------------------------------------------------------------
 
     def _build_layout(self) -> None:
-        # Top bar: add form
-        self._add_form = AddForm(self, on_add=self._on_add)
-        self._add_form.pack(fill=tk.X)
+        # Top bar: add form (left) + export button (right)
+        topbar = tk.Frame(self, bg="#1E1E2E")
+        topbar.pack(fill=tk.X)
+
+        tk.Button(
+            topbar,
+            text="⬇ Export & Clear",
+            command=self._on_export_and_clear,
+            bg="#555577",
+            fg="#FFFFFF",
+            font=("Helvetica", 11),
+            relief=tk.FLAT,
+            padx=12,
+            pady=4,
+            cursor="hand2",
+        ).pack(side=tk.RIGHT, padx=12, pady=10)
+
+        self._add_form = AddForm(topbar, on_add=self._on_add)
+        self._add_form.pack(side=tk.LEFT, fill=tk.X, expand=True)
 
         tk.Frame(self, bg="#3A3A5E", height=1).pack(fill=tk.X)
 
@@ -100,23 +116,6 @@ class App(tk.Tk):
             on_set_recur=self._on_set_recur,
         )
         self._done_list.pack(fill=tk.BOTH, expand=True)
-
-        # Bottom bar: export & clear button
-        tk.Frame(self, bg="#3A3A5E", height=1).pack(fill=tk.X)
-        bottom = tk.Frame(self, bg="#1E1E2E")
-        bottom.pack(fill=tk.X, padx=12, pady=8)
-        tk.Button(
-            bottom,
-            text="⬇ Export & Clear Lists",
-            command=self._on_export_and_clear,
-            bg="#555577",
-            fg="#FFFFFF",
-            font=("Helvetica", 11),
-            relief=tk.FLAT,
-            padx=14,
-            pady=5,
-            cursor="hand2",
-        ).pack(side=tk.RIGHT)
 
         # Floating error overlay (hidden until needed)
         self._error_label = tk.Label(
