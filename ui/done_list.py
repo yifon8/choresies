@@ -206,8 +206,11 @@ class DoneList(tk.Frame):
         )
         combo.pack(side=tk.LEFT)
 
+        # Custom sub-frame — hidden until "Custom…" is selected
+        custom_frame = tk.Frame(row, bg="#1E1E2E")
+
         custom_entry = tk.Entry(
-            row,
+            custom_frame,
             textvariable=custom_var,
             width=4,
             font=("Helvetica", 11),
@@ -215,17 +218,18 @@ class DoneList(tk.Frame):
             fg="#FFFFFF",
             insertbackground="#FFFFFF",
             relief=tk.FLAT,
-            state=tk.DISABLED,
         )
         custom_entry.pack(side=tk.LEFT, padx=(6, 2), ipady=3)
 
-        tk.Label(row, text="days", bg="#1E1E2E", fg="#AAAACC",
+        tk.Label(custom_frame, text="days", bg="#1E1E2E", fg="#AAAACC",
                  font=("Helvetica", 11)).pack(side=tk.LEFT)
 
         def on_preset_change(_e=None):
             is_custom = preset_var.get() == CUSTOM_LABEL
-            custom_entry.config(state=tk.NORMAL if is_custom else tk.DISABLED)
-            if not is_custom:
+            if is_custom:
+                custom_frame.pack(side=tk.LEFT)
+            else:
+                custom_frame.pack_forget()
                 custom_var.set("")
 
         combo.bind("<<ComboboxSelected>>", on_preset_change)
