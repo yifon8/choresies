@@ -1,0 +1,6 @@
+# No third-party GUI libraries — tkinter ships with Python
+# Runtime dependencies: none
+
+# Dev / build
+pyinstaller>=6.0
+pytest>=8.0
