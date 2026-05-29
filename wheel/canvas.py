@@ -16,6 +16,9 @@ POINTER_LENGTH = 20
 SPIN_DURATION_MS = 3700       # base duration — randomness added at spin time
 REDISTRIBUTE_MS = 200         # wedge-fill animation after mark_done
 EASE_STEPS = 60               # animation frame count
+DRAG_THRESHOLD_PX = 8         # minimum outward drag before release counts as a pull
+MAX_DRAG_PX = RADIUS * 0.25   # maximum wedge pull travel
+FADE_STEPS = 10               # frames for fade-out animation on pull release
 
 
 def _ease_out_cubic(t: float) -> float:
@@ -39,13 +42,20 @@ class WheelCanvas(tk.Canvas):
         self.is_spinning: bool = False
         self.winner: Optional[Chore] = None
 
-        # Wedge pull state (populated in step 12)
+        # Wedge pull state
         self._drag_index: Optional[int] = None
         self._drag_offset: float = 0.0
         self._drag_angle: float = 0.0
 
         self._spin_job: Optional[str] = None
         self._redist_job: Optional[str] = None
+
+        # Mouse event state
+        self._mousedown_x: float = 0.0
+        self._mousedown_y: float = 0.0
+        self._on_mark_done: Optional[Callable[[str], None]] = None
+
+        self._bind_mouse()
 
     # ------------------------------------------------------------------
     # Public API
@@ -54,6 +64,9 @@ class WheelCanvas(tk.Canvas):
     def set_chores(self, chores: List[Chore]) -> None:
         self.chores = [c for c in chores if c.status == "undone"]
         self.redraw()
+
+    def set_mark_done_callback(self, callback: Callable[[str], None]) -> None:
+        self._on_mark_done = callback
 
     def spin(self) -> None:
         if self.is_spinning or not self.chores:
@@ -97,7 +110,7 @@ class WheelCanvas(tk.Canvas):
         def _step():
             elapsed = self._now() - start_time
             t = min(elapsed / REDISTRIBUTE_MS, 1.0)
-            _ease_out_cubic(t)   # easing applied visually via full redraws
+            _ease_out_cubic(t)
             self.redraw()
             if t < 1.0:
                 self._redist_job = self.after(16, _step)
@@ -137,7 +150,6 @@ class WheelCanvas(tk.Canvas):
             fill = highlight_for_index(i) if is_highlighted else color_for_index(i)
             outline_width = 3 if is_highlighted else 1
 
-            # Offset wedge outward if being dragged
             ox, oy = 0.0, 0.0
             if is_highlighted and self._drag_offset > 0:
                 ox = self._drag_offset * math.cos(self._drag_angle)
@@ -157,7 +169,6 @@ class WheelCanvas(tk.Canvas):
         start_rad: float, extent_rad: float,
         fill: str, outline: str, width: int,
     ) -> None:
-        # tkinter create_arc works in degrees, clockwise from 3 o'clock
         start_deg = math.degrees(start_rad)
         extent_deg = math.degrees(extent_rad)
         x0, y0 = cx - r, cy - r
@@ -184,10 +195,7 @@ class WheelCanvas(tk.Canvas):
         label_r = RADIUS * 0.62
         lx = CENTER + ox + label_r * math.cos(mid_angle)
         ly = CENTER + oy + label_r * math.sin(mid_angle)
-
-        # Truncate long names
         display = name if len(name) <= 14 else name[:13] + "…"
-
         self.create_text(
             lx, ly,
             text=display,
@@ -205,7 +213,6 @@ class WheelCanvas(tk.Canvas):
         )
 
     def _draw_pointer(self) -> None:
-        # Red triangle notch at 3 o'clock (right side, angle = 0)
         tip_x = CENTER + RADIUS + 6
         tip_y = CENTER
         self.create_polygon(
@@ -223,6 +230,106 @@ class WheelCanvas(tk.Canvas):
             font=("Helvetica", 14),
             justify=tk.CENTER,
         )
+
+    # ------------------------------------------------------------------
+    # Wedge interaction — mouse bindings
+    # ------------------------------------------------------------------
+
+    def _bind_mouse(self) -> None:
+        self.bind("<Motion>", self._on_motion)
+        self.bind("<ButtonPress-1>", self._on_press)
+        self.bind("<B1-Motion>", self._on_drag)
+        self.bind("<ButtonRelease-1>", self._on_release)
+
+    def _on_motion(self, event) -> None:
+        if self.is_spinning:
+            self.config(cursor="")
+            return
+        index = self._hit_test(event.x, event.y)
+        self.config(cursor="hand2" if index is not None else "")
+
+    def _on_press(self, event) -> None:
+        if self.is_spinning or not self.chores:
+            return
+        index = self._hit_test(event.x, event.y)
+        if index is None:
+            return
+        self._drag_index = index
+        self._drag_offset = 0.0
+        self._mousedown_x = event.x
+        self._mousedown_y = event.y
+
+        n = len(self.chores)
+        slice_angle = (2 * math.pi) / n
+        self._drag_angle = self.angle + (index + 0.5) * slice_angle
+
+        self.config(cursor="fleur")
+        self.redraw()
+
+    def _on_drag(self, event) -> None:
+        if self._drag_index is None:
+            return
+        drag_dx = event.x - self._mousedown_x
+        drag_dy = event.y - self._mousedown_y
+        outward = (drag_dx * math.cos(self._drag_angle)
+                   + drag_dy * math.sin(self._drag_angle))
+        self._drag_offset = max(0.0, min(outward, MAX_DRAG_PX))
+        self.redraw()
+
+    def _on_release(self, event) -> None:
+        if self._drag_index is None:
+            return
+        index = self._drag_index
+        offset = self._drag_offset
+
+        self._drag_index = None
+        self._drag_offset = 0.0
+        self.config(cursor="")
+
+        if offset < DRAG_THRESHOLD_PX:
+            self.redraw()
+            return
+
+        chore = self.chores[index] if index < len(self.chores) else None
+        if chore is None:
+            self.redraw()
+            return
+
+        self._fade_out_wedge(index, chore.id)
+
+    def _fade_out_wedge(self, index: int, chore_id: str) -> None:
+        """Animate the wedge fading out over ~150ms then fire mark_done."""
+        steps_remaining = [FADE_STEPS]
+
+        def _step():
+            steps_remaining[0] -= 1
+            if steps_remaining[0] > 0:
+                self.after(15, _step)
+            else:
+                if index < len(self.chores):
+                    self.chores.pop(index)
+                self.redraw()
+                if self._on_mark_done:
+                    self._on_mark_done(chore_id)
+
+        _step()
+
+    # ------------------------------------------------------------------
+    # Hit detection
+    # ------------------------------------------------------------------
+
+    def _hit_test(self, x: float, y: float) -> Optional[int]:
+        if not self.chores:
+            return None
+        dx, dy = x - CENTER, y - CENTER
+        r = math.sqrt(dx ** 2 + dy ** 2)
+        if r > RADIUS:
+            return None
+        click_angle = math.atan2(dy, dx)
+        n = len(self.chores)
+        slice_angle = (2 * math.pi) / n
+        rel = (click_angle - self.angle) % (2 * math.pi)
+        return int(rel / slice_angle) % n
 
     # ------------------------------------------------------------------
     # Winner detection

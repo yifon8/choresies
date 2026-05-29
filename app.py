@@ -57,6 +57,7 @@ class App(tk.Tk):
         left.pack(side=tk.LEFT, fill=tk.BOTH, padx=8, pady=8)
 
         self._wheel = WheelCanvas(left, on_winner=self._on_winner)
+        self._wheel.set_mark_done_callback(self.mark_done)
         self._wheel.pack()
 
         spin_btn = tk.Button(
