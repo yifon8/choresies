@@ -32,7 +32,7 @@ Supports redoing a recurring chore earlier than the entered frequency.
 
 ## Demo
 
-![Choresies demo](assets/demo.gif)
+![Choresies demo](assets/Choresies.gif)
 
 ---
 
