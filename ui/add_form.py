@@ -25,9 +25,16 @@ class AddForm(tk.Frame):
     Calls on_add(name, interval_days_or_None) when the user submits.
     """
 
-    def __init__(self, parent: tk.Widget, on_add: Callable[[str, Optional[int]], None], **kwargs):
+    def __init__(
+        self,
+        parent: tk.Widget,
+        on_add: Callable[[str, Optional[int]], None],
+        on_error: Callable[[str], None] = lambda _: None,
+        **kwargs,
+    ):
         super().__init__(parent, bg="#1E1E2E", **kwargs)
         self.on_add = on_add
+        self.on_error = on_error
         self._build()
 
     # ------------------------------------------------------------------
@@ -160,13 +167,15 @@ class AddForm(tk.Frame):
         name = self._name_var.get().strip()[:30]
         if not name:
             self._name_entry.focus_set()
+            self.on_error("Please type a chore into the field")
             return
 
         interval: Optional[int] = None
         if self._recurring_var.get():
             interval = self._resolve_interval()
             if interval is None:
-                return  # invalid custom value — do nothing
+                self.on_error("Please enter a number of days for the custom interval")
+                return
 
         self._name_var.set("")
         self._name_entry.focus_set()
