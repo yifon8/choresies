@@ -105,7 +105,7 @@ class App(tk.Tk):
         right = tk.Frame(main, bg="#1E1E2E")
         right.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=(0, 8), pady=8)
 
-        self._undone_list = UndoneList(right, on_done=self.mark_done)
+        self._undone_list = UndoneList(right, on_done=self.mark_done, on_remove=self._remove_chore)
         self._undone_list.pack(fill=tk.BOTH, expand=True)
 
         tk.Frame(right, bg="#3A3A5E", height=1).pack(fill=tk.X, padx=8)
@@ -141,6 +141,11 @@ class App(tk.Tk):
         if chore is None or chore.status == "done":
             return
         chore.mark_done()
+        save_chores(self.chores)
+        self._refresh_all()
+
+    def _remove_chore(self, chore_id: str) -> None:
+        self.chores = [c for c in self.chores if c.id != chore_id]
         save_chores(self.chores)
         self._refresh_all()
 

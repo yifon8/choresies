@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import tkinter as tk
+from tkinter import messagebox
 from typing import Callable, List
 
 from chores.model import Chore
@@ -8,13 +9,21 @@ from chores.model import Chore
 
 class UndoneList(tk.Frame):
     """
-    Scrollable list of undone chores with a clickable checkbox on each row.
-    Calls on_done(chore_id) when the user ticks the checkbox.
+    Scrollable list of undone chores with a clickable checkbox and Remove button on each row.
+    Calls on_done(chore_id) when the checkbox is ticked.
+    Calls on_remove(chore_id) when Remove is confirmed.
     """
 
-    def __init__(self, parent: tk.Widget, on_done: Callable[[str], None], **kwargs):
+    def __init__(
+        self,
+        parent: tk.Widget,
+        on_done: Callable[[str], None],
+        on_remove: Callable[[str], None],
+        **kwargs,
+    ):
         super().__init__(parent, bg="#1E1E2E", **kwargs)
         self.on_done = on_done
+        self.on_remove = on_remove
         self._build()
 
     # ------------------------------------------------------------------
@@ -111,6 +120,27 @@ class UndoneList(tk.Frame):
             font=("Helvetica", 12),
             anchor=tk.W,
         ).pack(side=tk.LEFT, fill=tk.X, expand=True, pady=6)
+
+        tk.Button(
+            row,
+            text="Remove",
+            command=lambda cid=chore.id, name=chore.name: self._confirm_remove(cid, name),
+            bg="#2A2A3E",
+            fg="#CC4444",
+            font=("Helvetica", 9),
+            relief=tk.FLAT,
+            padx=8,
+            pady=2,
+            cursor="hand2",
+        ).pack(side=tk.RIGHT, padx=8, pady=6)
+
+    def _confirm_remove(self, chore_id: str, name: str) -> None:
+        confirmed = messagebox.askyesno(
+            title="Remove Chore",
+            message="Remove this chore from To Do list and wheel?",
+        )
+        if confirmed:
+            self.on_remove(chore_id)
 
     # ------------------------------------------------------------------
     # Scroll helpers
