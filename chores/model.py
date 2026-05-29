@@ -101,4 +101,4 @@ class Chore:
             return "Due tomorrow"
         if delta <= 6:
             return f"Due {self.next_due.strftime('%A')}"
-        return f"Due {self.next_due.strftime('%b %-d')}"
+        return f"Due {self.next_due.strftime('%b')} {self.next_due.day}"
