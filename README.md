@@ -13,7 +13,7 @@ A desktop chore wheel app built with Python and tkinter. Spin the wheel to pick 
 
 ## Demo
 
-![Choresies screenshot](assets/demo.png)
+![Choresies demo](assets/demo.gif)
 
 ---
 
@@ -55,7 +55,7 @@ choresies/
 │   └── store.py         # JSON load/save + recurring auto-return
 ├── ui/
 │   ├── add_form.py      # Add chore row with optional recurrence
-│   ├── undone_list.py   # Scrollable undone chores list
+├── undone_list.py   # Scrollable undone chores list
 │   └── done_list.py     # Scrollable done list with Recur / Redo buttons
 ├── data/
 │   └── chores.json      # Runtime data (auto-created on first run)
