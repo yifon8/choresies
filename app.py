@@ -60,7 +60,7 @@ class App(tk.Tk):
             cursor="hand2",
         ).pack(side=tk.RIGHT, padx=12, pady=10)
 
-        self._add_form = AddForm(topbar, on_add=self._on_add)
+        self._add_form = AddForm(topbar, on_add=self._on_add, on_error=self._show_error)
         self._add_form.pack(side=tk.LEFT, fill=tk.X, expand=True)
 
         tk.Frame(self, bg="#3A3A5E", height=1).pack(fill=tk.X)
