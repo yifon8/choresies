@@ -12,7 +12,7 @@ from ui.add_form import AddForm
 from ui.undone_list import UndoneList
 from ui.done_list import DoneList
 
-WINDOW_TITLE = "Chore Wheel 🎡"
+WINDOW_TITLE = "Choresies - A Chore Wheel 🎡"
 WINDOW_MIN_W = 900
 WINDOW_MIN_H = 600
 RECURRING_CHECK_INTERVAL_MS = 60 * 60 * 1000  # 1 hour
