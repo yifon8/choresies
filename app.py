@@ -23,7 +23,7 @@ class App(tk.Tk):
         super().__init__()
         self.title(WINDOW_TITLE)
         self.minsize(WINDOW_MIN_W, WINDOW_MIN_H)
-        self.configure(bg="#1E1E2E")
+        self.configure(bg="#F0F0F0")
 
         self.chores: List[Chore] = load_chores()
 
@@ -44,7 +44,7 @@ class App(tk.Tk):
 
     def _build_layout(self) -> None:
         # Top bar: add form (left) + export button (right)
-        topbar = tk.Frame(self, bg="#1E1E2E")
+        topbar = tk.Frame(self, bg="#F0F0F0")
         topbar.pack(fill=tk.X)
 
         tk.Button(
@@ -63,14 +63,14 @@ class App(tk.Tk):
         self._add_form = AddForm(topbar, on_add=self._on_add, on_error=self._show_error)
         self._add_form.pack(side=tk.LEFT, fill=tk.X, expand=True)
 
-        tk.Frame(self, bg="#3A3A5E", height=1).pack(fill=tk.X)
+        tk.Frame(self, bg="#CCCCCC", height=1).pack(fill=tk.X)
 
         # Main area: wheel (left) + lists (right)
-        main = tk.Frame(self, bg="#1E1E2E")
+        main = tk.Frame(self, bg="#F0F0F0")
         main.pack(fill=tk.BOTH, expand=True)
 
         # Left panel — wheel + spin button + result label
-        left = tk.Frame(main, bg="#1E1E2E")
+        left = tk.Frame(main, bg="#F0F0F0")
         left.pack(side=tk.LEFT, fill=tk.BOTH, padx=8, pady=8)
 
         self._wheel = WheelCanvas(left, on_winner=self._on_winner)
@@ -95,20 +95,20 @@ class App(tk.Tk):
         self._result_label = tk.Label(
             left,
             textvariable=self._result_var,
-            bg="#1E1E2E",
+            bg="#F0F0F0",
             fg="#F39C12",
             font=("Helvetica", 13, "bold"),
         )
         self._result_label.pack()
 
         # Right panel — undone list (top) + done list (bottom)
-        right = tk.Frame(main, bg="#1E1E2E")
+        right = tk.Frame(main, bg="#F0F0F0")
         right.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=(0, 8), pady=8)
 
         self._undone_list = UndoneList(right, on_done=self.mark_done, on_remove=self._remove_chore)
         self._undone_list.pack(fill=tk.BOTH, expand=True)
 
-        tk.Frame(right, bg="#3A3A5E", height=1).pack(fill=tk.X, padx=8)
+        tk.Frame(right, bg="#CCCCCC", height=1).pack(fill=tk.X, padx=8)
 
         self._done_list = DoneList(
             right,

@@ -35,7 +35,7 @@ class DoneList(tk.Frame):
         on_set_recur: Callable[[str, int], None],
         **kwargs,
     ):
-        super().__init__(parent, bg="#1E1E2E", **kwargs)
+        super().__init__(parent, bg="#F0F0F0", **kwargs)
         self.on_redo = on_redo
         self.on_set_recur = on_set_recur
         self._expanded: Optional[str] = None   # chore_id whose recur form is open
@@ -49,31 +49,31 @@ class DoneList(tk.Frame):
         header = tk.Label(
             self,
             text="✓ Done",
-            bg="#1E1E2E",
-            fg="#FFFFFF",
+            bg="#F0F0F0",
+            fg="#222222",
             font=("Helvetica", 13, "bold"),
             anchor=tk.W,
         )
         header.pack(fill=tk.X, padx=12, pady=(10, 4))
 
-        tk.Frame(self, bg="#3A3A5E", height=1).pack(fill=tk.X, padx=12)
+        tk.Frame(self, bg="#CCCCCC", height=1).pack(fill=tk.X, padx=12)
 
-        outer = tk.Frame(self, bg="#1E1E2E")
+        outer = tk.Frame(self, bg="#F0F0F0")
         outer.pack(fill=tk.BOTH, expand=True, padx=4, pady=4)
 
-        scrollbar = tk.Scrollbar(outer, orient=tk.VERTICAL, bg="#2A2A3E")
+        scrollbar = tk.Scrollbar(outer, orient=tk.VERTICAL, bg="#CCCCCC")
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
 
         self._canvas = tk.Canvas(
             outer,
-            bg="#1E1E2E",
+            bg="#F0F0F0",
             highlightthickness=0,
             yscrollcommand=scrollbar.set,
         )
         self._canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         scrollbar.config(command=self._canvas.yview)
 
-        self._inner = tk.Frame(self._canvas, bg="#1E1E2E")
+        self._inner = tk.Frame(self._canvas, bg="#F0F0F0")
         self._window = self._canvas.create_window((0, 0), window=self._inner, anchor=tk.NW)
 
         self._inner.bind("<Configure>", self._on_inner_configure)
@@ -100,8 +100,8 @@ class DoneList(tk.Frame):
             tk.Label(
                 self._inner,
                 text="Nothing done yet.",
-                bg="#1E1E2E",
-                fg="#888899",
+                bg="#F0F0F0",
+                fg="#999999",
                 font=("Helvetica", 12),
             ).pack(pady=20)
             return
@@ -114,17 +114,17 @@ class DoneList(tk.Frame):
     # ------------------------------------------------------------------
 
     def _add_row(self, chore: Chore) -> None:
-        card = tk.Frame(self._inner, bg="#2A2A3E", pady=2)
+        card = tk.Frame(self._inner, bg="#FFFFFF", pady=2)
         card.pack(fill=tk.X, padx=4, pady=3)
 
         # Top line: checkbox + name (strikethrough via overstrike font) + buttons
-        top = tk.Frame(card, bg="#2A2A3E")
+        top = tk.Frame(card, bg="#FFFFFF")
         top.pack(fill=tk.X)
 
         tk.Label(
             top,
             text="☑",
-            bg="#2A2A3E",
+            bg="#FFFFFF",
             fg="#2ECC71",
             font=("Helvetica", 13),
         ).pack(side=tk.LEFT, padx=(8, 4), pady=(6, 2))
@@ -132,8 +132,8 @@ class DoneList(tk.Frame):
         name_label = tk.Label(
             top,
             text=f"{chore.name}  (×{chore.completions})",
-            bg="#2A2A3E",
-            fg="#888899",
+            bg="#FFFFFF",
+            fg="#999999",
             font=("Helvetica", 12, "overstrike"),
             anchor=tk.W,
         )
@@ -171,14 +171,14 @@ class DoneList(tk.Frame):
         tk.Label(
             card,
             text=chore.due_label(),
-            bg="#2A2A3E",
-            fg="#AAAACC",
+            bg="#FFFFFF",
+            fg="#666677",
             font=("Helvetica", 10),
             anchor=tk.W,
         ).pack(fill=tk.X, padx=(34, 8), pady=(0, 6))
 
         # Inline recur form (hidden until Recur button clicked)
-        recur_frame = tk.Frame(card, bg="#1E1E2E")
+        recur_frame = tk.Frame(card, bg="#F0F0F0")
         recur_frame._chore_id = chore.id  # type: ignore[attr-defined]
         self._build_recur_form(recur_frame, chore, card)
 
@@ -190,10 +190,10 @@ class DoneList(tk.Frame):
         preset_var = tk.StringVar(value=PRESET_LABELS[2])
         custom_var = tk.StringVar()
 
-        row = tk.Frame(frame, bg="#1E1E2E")
+        row = tk.Frame(frame, bg="#F0F0F0")
         row.pack(fill=tk.X, pady=4)
 
-        tk.Label(row, text="Every:", bg="#1E1E2E", fg="#AAAACC",
+        tk.Label(row, text="Every:", bg="#F0F0F0", fg="#666677",
                  font=("Helvetica", 11)).pack(side=tk.LEFT, padx=(4, 4))
 
         combo = ttk.Combobox(
@@ -207,21 +207,21 @@ class DoneList(tk.Frame):
         combo.pack(side=tk.LEFT)
 
         # Custom sub-frame — hidden until "Custom…" is selected
-        custom_frame = tk.Frame(row, bg="#1E1E2E")
+        custom_frame = tk.Frame(row, bg="#F0F0F0")
 
         custom_entry = tk.Entry(
             custom_frame,
             textvariable=custom_var,
             width=4,
             font=("Helvetica", 11),
-            bg="#2A2A3E",
-            fg="#FFFFFF",
-            insertbackground="#FFFFFF",
+            bg="#FFFFFF",
+            fg="#222222",
+            insertbackground="#333333",
             relief=tk.FLAT,
         )
         custom_entry.pack(side=tk.LEFT, padx=(6, 2), ipady=3)
 
-        tk.Label(custom_frame, text="days", bg="#1E1E2E", fg="#AAAACC",
+        tk.Label(custom_frame, text="days", bg="#F0F0F0", fg="#666677",
                  font=("Helvetica", 11)).pack(side=tk.LEFT)
 
         def on_preset_change(_e=None):

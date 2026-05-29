@@ -32,7 +32,7 @@ class AddForm(tk.Frame):
         on_error: Callable[[str], None] = lambda _: None,
         **kwargs,
     ):
-        super().__init__(parent, bg="#1E1E2E", **kwargs)
+        super().__init__(parent, bg="#F0F0F0", **kwargs)
         self.on_add = on_add
         self.on_error = on_error
         self._build()
@@ -43,7 +43,7 @@ class AddForm(tk.Frame):
 
     def _build(self) -> None:
         # Row 1 — recurring checkbox + frequency controls
-        row1 = tk.Frame(self, bg="#1E1E2E")
+        row1 = tk.Frame(self, bg="#F0F0F0")
         row1.pack(fill=tk.X, padx=12, pady=(10, 2))
 
         self._recurring_var = tk.BooleanVar(value=False)
@@ -52,16 +52,16 @@ class AddForm(tk.Frame):
             text="Recurring",
             variable=self._recurring_var,
             command=self._on_recurring_toggle,
-            bg="#1E1E2E",
+            bg="#F0F0F0",
             fg=RECUR_COLOR,
-            selectcolor="#2A2A3E",
-            activebackground="#1E1E2E",
+            selectcolor="#F0F0F0",
+            activebackground="#F0F0F0",
             activeforeground=RECUR_COLOR,
             font=("Helvetica", 11, "bold"),
         )
         recur_chk.pack(side=tk.LEFT)
 
-        self._freq_frame = tk.Frame(row1, bg="#1E1E2E")
+        self._freq_frame = tk.Frame(row1, bg="#F0F0F0")
         self._freq_frame.pack(side=tk.LEFT, padx=(8, 0))
 
         self._preset_var = tk.StringVar(value=PRESET_LABELS[2])  # default: Weekly
@@ -77,13 +77,13 @@ class AddForm(tk.Frame):
         self._preset_menu.bind("<<ComboboxSelected>>", self._on_preset_change)
 
         # Custom sub-frame — hidden until "Custom…" is selected
-        self._custom_frame = tk.Frame(self._freq_frame, bg="#1E1E2E")
+        self._custom_frame = tk.Frame(self._freq_frame, bg="#F0F0F0")
 
         tk.Label(
             self._custom_frame,
             text="Custom:",
-            bg="#1E1E2E",
-            fg="#AAAACC",
+            bg="#F0F0F0",
+            fg="#666677",
             font=("Helvetica", 11),
         ).pack(side=tk.LEFT, padx=(10, 4))
 
@@ -93,9 +93,9 @@ class AddForm(tk.Frame):
             textvariable=self._custom_var,
             width=5,
             font=("Helvetica", 11),
-            bg="#2A2A3E",
-            fg="#FFFFFF",
-            insertbackground="#FFFFFF",
+            bg="#FFFFFF",
+            fg="#222222",
+            insertbackground="#333333",
             relief=tk.FLAT,
         )
         self._custom_entry.pack(side=tk.LEFT, ipady=3)
@@ -103,8 +103,8 @@ class AddForm(tk.Frame):
         tk.Label(
             self._custom_frame,
             text="days",
-            bg="#1E1E2E",
-            fg="#AAAACC",
+            bg="#F0F0F0",
+            fg="#666677",
             font=("Helvetica", 11),
         ).pack(side=tk.LEFT, padx=(4, 0))
 
@@ -112,7 +112,7 @@ class AddForm(tk.Frame):
         self._freq_frame.pack_forget()
 
         # Row 2 — name entry + Add button
-        row2 = tk.Frame(self, bg="#1E1E2E")
+        row2 = tk.Frame(self, bg="#F0F0F0")
         row2.pack(fill=tk.X, padx=12, pady=(2, 10))
 
         self._name_var = tk.StringVar()
@@ -120,9 +120,9 @@ class AddForm(tk.Frame):
             row2,
             textvariable=self._name_var,
             font=("Helvetica", 13),
-            bg="#2A2A3E",
-            fg="#FFFFFF",
-            insertbackground="#FFFFFF",
+            bg="#FFFFFF",
+            fg="#222222",
+            insertbackground="#333333",
             relief=tk.FLAT,
             width=28,
         )

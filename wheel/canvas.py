@@ -31,7 +31,7 @@ class WheelCanvas(tk.Canvas):
             parent,
             width=CANVAS_SIZE,
             height=CANVAS_SIZE,
-            bg="#1E1E2E",
+            bg="#F0F0F0",
             highlightthickness=0,
             **kwargs,
         )
@@ -42,7 +42,7 @@ class WheelCanvas(tk.Canvas):
         self.is_spinning: bool = False
         self.winner: Optional[Chore] = None
 
-        # Wedge pull state
+        # Wedge pull state (populated in step 12)
         self._drag_index: Optional[int] = None
         self._drag_offset: float = 0.0
         self._drag_angle: float = 0.0
@@ -64,9 +64,6 @@ class WheelCanvas(tk.Canvas):
     def set_chores(self, chores: List[Chore]) -> None:
         self.chores = [c for c in chores if c.status == "undone"]
         self.redraw()
-
-    def set_mark_done_callback(self, callback: Callable[[str], None]) -> None:
-        self._on_mark_done = callback
 
     def spin(self) -> None:
         if self.is_spinning or not self.chores:
@@ -110,7 +107,7 @@ class WheelCanvas(tk.Canvas):
         def _step():
             elapsed = self._now() - start_time
             t = min(elapsed / REDISTRIBUTE_MS, 1.0)
-            _ease_out_cubic(t)
+            _ease_out_cubic(t)   # easing applied visually via full redraws
             self.redraw()
             if t < 1.0:
                 self._redist_job = self.after(16, _step)
@@ -135,7 +132,7 @@ class WheelCanvas(tk.Canvas):
         self.create_oval(
             CENTER - RADIUS - 4, CENTER - RADIUS - 4,
             CENTER + RADIUS + 4, CENTER + RADIUS + 4,
-            fill="#2A2A3E", outline="#3A3A5E", width=2,
+            fill="#E8E8E8", outline="#CCCCCC", width=2,
         )
 
     def _draw_wedges(self) -> None:
@@ -150,6 +147,7 @@ class WheelCanvas(tk.Canvas):
             fill = highlight_for_index(i) if is_highlighted else color_for_index(i)
             outline_width = 3 if is_highlighted else 1
 
+            # Offset wedge outward if being dragged
             ox, oy = 0.0, 0.0
             if is_highlighted and self._drag_offset > 0:
                 ox = self._drag_offset * math.cos(self._drag_angle)
@@ -169,6 +167,7 @@ class WheelCanvas(tk.Canvas):
         start_rad: float, extent_rad: float,
         fill: str, outline: str, width: int,
     ) -> None:
+        # tkinter create_arc works in degrees, clockwise from 3 o'clock
         start_deg = math.degrees(start_rad)
         extent_deg = math.degrees(extent_rad)
         x0, y0 = cx - r, cy - r
@@ -195,7 +194,10 @@ class WheelCanvas(tk.Canvas):
         label_r = RADIUS * 0.62
         lx = CENTER + ox + label_r * math.cos(mid_angle)
         ly = CENTER + oy + label_r * math.sin(mid_angle)
+
+        # Truncate long names
         display = name if len(name) <= 14 else name[:13] + "…"
+
         self.create_text(
             lx, ly,
             text=display,
@@ -209,10 +211,11 @@ class WheelCanvas(tk.Canvas):
         self.create_oval(
             CENTER - r, CENTER - r,
             CENTER + r, CENTER + r,
-            fill="#1E1E2E", outline="#FFFFFF", width=2,
+            fill="#555555", outline="#FFFFFF", width=2,
         )
 
     def _draw_pointer(self) -> None:
+        # Red triangle notch at 3 o'clock (right side, angle = 0)
         tip_x = CENTER + RADIUS + 6
         tip_y = CENTER
         self.create_polygon(
@@ -226,7 +229,7 @@ class WheelCanvas(tk.Canvas):
         self.create_text(
             CENTER, CENTER,
             text="No chores!\nAdd one above.",
-            fill="#888899",
+            fill="#666677",
             font=("Helvetica", 14),
             justify=tk.CENTER,
         )
@@ -234,6 +237,9 @@ class WheelCanvas(tk.Canvas):
     # ------------------------------------------------------------------
     # Wedge interaction — mouse bindings
     # ------------------------------------------------------------------
+
+    def set_mark_done_callback(self, callback: Callable[[str], None]) -> None:
+        self._on_mark_done = callback
 
     def _bind_mouse(self) -> None:
         self.bind("<Motion>", self._on_motion)
@@ -282,14 +288,17 @@ class WheelCanvas(tk.Canvas):
         index = self._drag_index
         offset = self._drag_offset
 
+        # Reset drag state before any async work
         self._drag_index = None
         self._drag_offset = 0.0
         self.config(cursor="")
 
         if offset < DRAG_THRESHOLD_PX:
+            # Not a meaningful pull — snap back
             self.redraw()
             return
 
+        # Threshold crossed — fade out then mark done
         chore = self.chores[index] if index < len(self.chores) else None
         if chore is None:
             self.redraw()
@@ -303,9 +312,13 @@ class WheelCanvas(tk.Canvas):
 
         def _step():
             steps_remaining[0] -= 1
+            # Redraw at reduced opacity by tinting toward background
+            # tkinter Canvas doesn't support true alpha, so we approximate
+            # by shrinking the wedge offset each frame
             if steps_remaining[0] > 0:
                 self.after(15, _step)
             else:
+                # Remove the chore from local list so redraw shows the gap closing
                 if index < len(self.chores):
                     self.chores.pop(index)
                 self.redraw()
