@@ -1,0 +1,178 @@
+from __future__ import annotations
+
+import tkinter as tk
+from tkinter import messagebox
+from typing import List, Optional
+
+from chores.model import Chore
+from chores.store import load_chores, save_chores, check_recurring_returns
+from wheel.canvas import WheelCanvas
+from ui.add_form import AddForm
+from ui.undone_list import UndoneList
+from ui.done_list import DoneList
+
+WINDOW_TITLE = "Chore Wheel 🎡"
+WINDOW_MIN_W = 900
+WINDOW_MIN_H = 600
+RECURRING_CHECK_INTERVAL_MS = 60 * 60 * 1000  # 1 hour
+
+
+class App(tk.Tk):
+    def __init__(self):
+        super().__init__()
+        self.title(WINDOW_TITLE)
+        self.minsize(WINDOW_MIN_W, WINDOW_MIN_H)
+        self.configure(bg="#1E1E2E")
+
+        self.chores: List[Chore] = load_chores()
+
+        self._build_layout()
+        self._refresh_all()
+
+        # Auto-return overdue recurring chores on launch
+        if check_recurring_returns(self.chores):
+            save_chores(self.chores)
+            self._refresh_all()
+
+        # Hourly recurring check
+        self._schedule_recurring_check()
+
+    # ------------------------------------------------------------------
+    # Layout
+    # ------------------------------------------------------------------
+
+    def _build_layout(self) -> None:
+        # Top bar: add form
+        self._add_form = AddForm(self, on_add=self._on_add)
+        self._add_form.pack(fill=tk.X)
+
+        tk.Frame(self, bg="#3A3A5E", height=1).pack(fill=tk.X)
+
+        # Main area: wheel (left) + lists (right)
+        main = tk.Frame(self, bg="#1E1E2E")
+        main.pack(fill=tk.BOTH, expand=True)
+
+        # Left panel — wheel + spin button + result label
+        left = tk.Frame(main, bg="#1E1E2E")
+        left.pack(side=tk.LEFT, fill=tk.BOTH, padx=8, pady=8)
+
+        self._wheel = WheelCanvas(left, on_winner=self._on_winner)
+        self._wheel.pack()
+
+        spin_btn = tk.Button(
+            left,
+            text="🎯  Spin",
+            command=self._wheel.spin,
+            bg="#3498DB",
+            fg="#FFFFFF",
+            font=("Helvetica", 14, "bold"),
+            relief=tk.FLAT,
+            padx=24,
+            pady=8,
+            cursor="hand2",
+        )
+        spin_btn.pack(pady=(8, 4))
+
+        self._result_var = tk.StringVar(value="")
+        self._result_label = tk.Label(
+            left,
+            textvariable=self._result_var,
+            bg="#1E1E2E",
+            fg="#F39C12",
+            font=("Helvetica", 13, "bold"),
+        )
+        self._result_label.pack()
+
+        # Right panel — undone list (top) + done list (bottom)
+        right = tk.Frame(main, bg="#1E1E2E")
+        right.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=(0, 8), pady=8)
+
+        self._undone_list = UndoneList(right, on_done=self.mark_done)
+        self._undone_list.pack(fill=tk.BOTH, expand=True)
+
+        tk.Frame(right, bg="#3A3A5E", height=1).pack(fill=tk.X, padx=8)
+
+        self._done_list = DoneList(
+            right,
+            on_redo=self.redo_chore,
+            on_set_recur=self._on_set_recur,
+        )
+        self._done_list.pack(fill=tk.BOTH, expand=True)
+
+    # ------------------------------------------------------------------
+    # Single source of truth: state mutations
+    # ------------------------------------------------------------------
+
+    def mark_done(self, chore_id: str) -> None:
+        chore = self._find(chore_id)
+        if chore is None or chore.status == "done":
+            return
+        chore.mark_done()
+        save_chores(self.chores)
+        self._refresh_all()
+
+    def redo_chore(self, chore_id: str) -> None:
+        chore = self._find(chore_id)
+        if chore is None or chore.status == "undone":
+            return
+        chore.redo()
+        save_chores(self.chores)
+        self._refresh_all()
+
+    # ------------------------------------------------------------------
+    # Callbacks from UI panels
+    # ------------------------------------------------------------------
+
+    def _on_add(self, name: str, interval_days: Optional[int]) -> None:
+        chore = Chore(name=name)
+        if interval_days is not None:
+            chore.set_recurrence(interval_days)
+        self.chores.append(chore)
+        save_chores(self.chores)
+        self._refresh_all()
+
+    def _on_winner(self, chore: Chore) -> None:
+        self._result_var.set(f"🎯  {chore.name}")
+
+    def _on_set_recur(self, chore_id: str, interval_days: int) -> None:
+        chore = self._find(chore_id)
+        if chore is None:
+            return
+        chore.set_recurrence(interval_days)
+        # If next_due is already past, return chore to wheel immediately
+        if chore.is_due():
+            chore.status = "undone"
+        save_chores(self.chores)
+        self._refresh_all()
+
+    # ------------------------------------------------------------------
+    # Refresh
+    # ------------------------------------------------------------------
+
+    def _refresh_all(self) -> None:
+        self._wheel.set_chores(self.chores)
+        self._undone_list.refresh(self.chores)
+        self._done_list.refresh(self.chores)
+
+    # ------------------------------------------------------------------
+    # Recurring auto-return (hourly)
+    # ------------------------------------------------------------------
+
+    def _schedule_recurring_check(self) -> None:
+        self.after(RECURRING_CHECK_INTERVAL_MS, self._recurring_check)
+
+    def _recurring_check(self) -> None:
+        if self._wheel.is_spinning:
+            self._schedule_recurring_check()
+            return
+        if check_recurring_returns(self.chores):
+            save_chores(self.chores)
+            self._refresh_all()
+        self._schedule_recurring_check()
+
+    # ------------------------------------------------------------------
+    # Helpers
+    # ------------------------------------------------------------------
+
+    def _find(self, chore_id: str) -> Optional[Chore]:
+        return next((c for c in self.chores if c.id == chore_id), None)
