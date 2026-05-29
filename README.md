@@ -1,5 +1,7 @@
 ReadMe created by Claude Chat from conclusions reached in design chat session with Yifon
-
+Yifon had read this Apartment Therapy article https://www.apartmenttherapy.com/wheel-of-chores-decluttering-tip-37551580
+and was reminded of the idea of wheel of chores which she may have also seen before, elsewhere online.
+Yifon wanted to build a local private application that runs on windows and Mac OS based on this idea.
 
 
 \# Chore Wheel 🎡
@@ -17,6 +19,7 @@ ReadMe created by Claude Chat from conclusions reached in design chat session wi
 
 
 A desktop chore wheel app built with Python and tkinter. Spin the wheel to pick a chore, drag a wedge out to mark it done, and let recurring chores return automatically on their schedule.
+Supports redoing a recurring chore earlier than the entered frequency.
 
 
 
