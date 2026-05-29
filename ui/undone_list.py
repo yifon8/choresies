@@ -8,8 +8,8 @@ from chores.model import Chore
 
 class UndoneList(tk.Frame):
     """
-    Scrollable list of undone chores with a Done button on each row.
-    Calls on_done(chore_id) when the user clicks Done.
+    Scrollable list of undone chores with a clickable checkbox on each row.
+    Calls on_done(chore_id) when the user ticks the checkbox.
     """
 
     def __init__(self, parent: tk.Widget, on_done: Callable[[str], None], **kwargs):
@@ -91,13 +91,17 @@ class UndoneList(tk.Frame):
         row = tk.Frame(self._inner, bg="#2A2A3E", pady=2)
         row.pack(fill=tk.X, padx=4, pady=3)
 
-        tk.Label(
+        chk_var = tk.BooleanVar(value=False)
+        chk = tk.Checkbutton(
             row,
-            text="□",
+            variable=chk_var,
+            command=lambda cid=chore.id: self.on_done(cid),
             bg="#2A2A3E",
-            fg="#AAAACC",
-            font=("Helvetica", 13),
-        ).pack(side=tk.LEFT, padx=(8, 4), pady=6)
+            activebackground="#2A2A3E",
+            selectcolor="#2A2A3E",
+            cursor="hand2",
+        )
+        chk.pack(side=tk.LEFT, padx=(8, 4), pady=6)
 
         tk.Label(
             row,
@@ -107,20 +111,6 @@ class UndoneList(tk.Frame):
             font=("Helvetica", 12),
             anchor=tk.W,
         ).pack(side=tk.LEFT, fill=tk.X, expand=True, pady=6)
-
-        done_btn = tk.Button(
-            row,
-            text="Done ✓",
-            command=lambda cid=chore.id: self.on_done(cid),
-            bg="#2ECC71",
-            fg="#FFFFFF",
-            font=("Helvetica", 10, "bold"),
-            relief=tk.FLAT,
-            padx=10,
-            pady=3,
-            cursor="hand2",
-        )
-        done_btn.pack(side=tk.RIGHT, padx=8, pady=6)
 
     # ------------------------------------------------------------------
     # Scroll helpers
