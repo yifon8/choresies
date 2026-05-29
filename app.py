@@ -100,6 +100,21 @@ class App(tk.Tk):
         )
         self._done_list.pack(fill=tk.BOTH, expand=True)
 
+        # Floating error overlay (hidden until needed)
+        self._error_label = tk.Label(
+            self,
+            text="",
+            bg="#C0392B",
+            fg="#FFFFFF",
+            font=("Helvetica", 12, "bold"),
+            padx=18,
+            pady=10,
+            wraplength=360,
+            justify=tk.CENTER,
+            relief=tk.FLAT,
+        )
+        self._error_dismiss_job: Optional[str] = None
+
     # ------------------------------------------------------------------
     # Single source of truth: state mutations
     # ------------------------------------------------------------------
@@ -125,6 +140,14 @@ class App(tk.Tk):
     # ------------------------------------------------------------------
 
     def _on_add(self, name: str, interval_days: Optional[int]) -> None:
+        name_lower = name.lower()
+        for existing in self.chores:
+            if existing.name.lower() == name_lower:
+                if existing.status == "undone":
+                    self._show_error("Chore already in To Do list")
+                else:
+                    self._show_error("Chore in Done list, please Redo, or schedule Recurrence")
+                return
         chore = Chore(name=name)
         if interval_days is not None:
             chore.set_recurrence(interval_days)
@@ -174,6 +197,20 @@ class App(tk.Tk):
     # ------------------------------------------------------------------
     # Helpers
     # ------------------------------------------------------------------
+
+    def _show_error(self, message: str) -> None:
+        # Cancel any existing dismiss timer
+        if self._error_dismiss_job:
+            self.after_cancel(self._error_dismiss_job)
+        self._error_label.config(text=message)
+        # Centre the overlay near the top of the window
+        self._error_label.place(relx=0.5, rely=0.08, anchor=tk.CENTER)
+        self._error_label.lift()
+        self._error_dismiss_job = self.after(3000, self._hide_error)
+
+    def _hide_error(self) -> None:
+        self._error_label.place_forget()
+        self._error_dismiss_job = None
 
     def _find(self, chore_id: str) -> Optional[Chore]:
         return next((c for c in self.chores if c.id == chore_id), None)
