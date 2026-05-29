@@ -1,4 +1,4 @@
-ReadMe created from conclusions of chat session by Claude Chat
+ReadMe created by Claude Chat from conclusions reached in design chat session with Yifon
 
 
 
