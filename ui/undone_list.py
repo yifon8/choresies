@@ -21,7 +21,7 @@ class UndoneList(tk.Frame):
         on_remove: Callable[[str], None],
         **kwargs,
     ):
-        super().__init__(parent, bg="#1E1E2E", **kwargs)
+        super().__init__(parent, bg="#F0F0F0", **kwargs)
         self.on_done = on_done
         self.on_remove = on_remove
         self._build()
@@ -34,33 +34,33 @@ class UndoneList(tk.Frame):
         header = tk.Label(
             self,
             text="📋 To Do",
-            bg="#1E1E2E",
-            fg="#FFFFFF",
+            bg="#F0F0F0",
+            fg="#222222",
             font=("Helvetica", 13, "bold"),
             anchor=tk.W,
         )
         header.pack(fill=tk.X, padx=12, pady=(10, 4))
 
-        separator = tk.Frame(self, bg="#3A3A5E", height=1)
+        separator = tk.Frame(self, bg="#CCCCCC", height=1)
         separator.pack(fill=tk.X, padx=12)
 
         # Scrollable container
-        outer = tk.Frame(self, bg="#1E1E2E")
+        outer = tk.Frame(self, bg="#F0F0F0")
         outer.pack(fill=tk.BOTH, expand=True, padx=4, pady=4)
 
-        scrollbar = tk.Scrollbar(outer, orient=tk.VERTICAL, bg="#2A2A3E")
+        scrollbar = tk.Scrollbar(outer, orient=tk.VERTICAL, bg="#CCCCCC")
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
 
         self._canvas = tk.Canvas(
             outer,
-            bg="#1E1E2E",
+            bg="#F0F0F0",
             highlightthickness=0,
             yscrollcommand=scrollbar.set,
         )
         self._canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         scrollbar.config(command=self._canvas.yview)
 
-        self._inner = tk.Frame(self._canvas, bg="#1E1E2E")
+        self._inner = tk.Frame(self._canvas, bg="#F0F0F0")
         self._window = self._canvas.create_window((0, 0), window=self._inner, anchor=tk.NW)
 
         self._inner.bind("<Configure>", self._on_inner_configure)
@@ -83,8 +83,8 @@ class UndoneList(tk.Frame):
             tk.Label(
                 self._inner,
                 text="All done! 🎉",
-                bg="#1E1E2E",
-                fg="#888899",
+                bg="#F0F0F0",
+                fg="#999999",
                 font=("Helvetica", 12),
             ).pack(pady=20)
             return
@@ -97,7 +97,7 @@ class UndoneList(tk.Frame):
     # ------------------------------------------------------------------
 
     def _add_row(self, chore: Chore) -> None:
-        row = tk.Frame(self._inner, bg="#2A2A3E", pady=2)
+        row = tk.Frame(self._inner, bg="#FFFFFF", pady=2)
         row.pack(fill=tk.X, padx=4, pady=3)
 
         chk_var = tk.BooleanVar(value=False)
@@ -105,9 +105,9 @@ class UndoneList(tk.Frame):
             row,
             variable=chk_var,
             command=lambda cid=chore.id: self.on_done(cid),
-            bg="#2A2A3E",
-            activebackground="#2A2A3E",
-            selectcolor="#2A2A3E",
+            bg="#FFFFFF",
+            activebackground="#FFFFFF",
+            selectcolor="#FFFFFF",
             cursor="hand2",
         )
         chk.pack(side=tk.LEFT, padx=(8, 4), pady=6)
@@ -115,8 +115,8 @@ class UndoneList(tk.Frame):
         tk.Label(
             row,
             text=chore.name,
-            bg="#2A2A3E",
-            fg="#FFFFFF",
+            bg="#FFFFFF",
+            fg="#222222",
             font=("Helvetica", 12),
             anchor=tk.W,
         ).pack(side=tk.LEFT, fill=tk.X, expand=True, pady=6)
@@ -125,7 +125,7 @@ class UndoneList(tk.Frame):
             row,
             text="Remove",
             command=lambda cid=chore.id, name=chore.name: self._confirm_remove(cid, name),
-            bg="#2A2A3E",
+            bg="#FFFFFF",
             fg="#CC4444",
             font=("Helvetica", 9),
             relief=tk.FLAT,
